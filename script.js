@@ -1,25 +1,34 @@
-const taskInput = document.getElementById("taskInput");
-const addTaskBtn = document.getElementById("addTaskBtn");
-const taskList = document.getElementById("taskList");
-
 let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+
+const taskInput = document.getElementById("taskInput");
+const addTaskButton = document.getElementById("addTask");
+const taskList = document.getElementById("taskList");
+const taskCount = document.getElementById("taskCount");
 
 function saveTasks() {
     localStorage.setItem("tasks", JSON.stringify(tasks));
 }
 
-function displayTasks() {
+function displayTasks(filter = "all") {
     taskList.innerHTML = "";
 
     tasks.forEach((task, index) => {
-        const li = document.createElement("li");
 
-        const span = document.createElement("span");
-        span.textContent = task.text;
+        if (filter === "completed" && !task.completed) return;
+        if (filter === "pending" && task.completed) return;
+
+        const li = document.createElement("li");
+        li.className = "task";
 
         if (task.completed) {
-            span.style.textDecoration = "line-through";
+            li.classList.add("completed");
         }
+
+        const taskText = document.createElement("span");
+        taskText.textContent = task.text;
+
+        const buttons = document.createElement("div");
+        buttons.className = "task-buttons";
 
         const completeButton = document.createElement("button");
         completeButton.textContent = task.completed ? "Undo" : "Complete";
@@ -27,7 +36,7 @@ function displayTasks() {
         completeButton.addEventListener("click", function () {
             tasks[index].completed = !tasks[index].completed;
             saveTasks();
-            displayTasks();
+            displayTasks(filter);
         });
 
         const deleteButton = document.createElement("button");
@@ -36,18 +45,28 @@ function displayTasks() {
         deleteButton.addEventListener("click", function () {
             tasks.splice(index, 1);
             saveTasks();
-            displayTasks();
+            displayTasks(filter);
         });
 
-        li.appendChild(span);
-        li.appendChild(completeButton);
-        li.appendChild(deleteButton);
+        buttons.appendChild(completeButton);
+        buttons.appendChild(deleteButton);
+
+        li.appendChild(taskText);
+        li.appendChild(buttons);
 
         taskList.appendChild(li);
     });
+
+    updateCounter();
 }
 
-function addTask() {
+function updateCounter() {
+    const pendingTasks = tasks.filter(task => !task.completed);
+    taskCount.textContent = pendingTasks.length;
+}
+
+addTaskButton.addEventListener("click", function () {
+
     const text = taskInput.value.trim();
 
     if (text === "") {
@@ -64,14 +83,16 @@ function addTask() {
 
     saveTasks();
     displayTasks();
-}
-
-addTaskBtn.addEventListener("click", addTask);
+});
 
 taskInput.addEventListener("keypress", function (event) {
     if (event.key === "Enter") {
-        addTask();
+        addTaskButton.click();
     }
 });
+
+function filterTasks(filter) {
+    displayTasks(filter);
+}
 
 displayTasks();
