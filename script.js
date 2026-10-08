@@ -1,12 +1,17 @@
-let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
-
 const taskInput = document.getElementById("taskInput");
 const addTaskButton = document.getElementById("addTask");
 const taskList = document.getElementById("taskList");
 const taskCount = document.getElementById("taskCount");
 
+let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+
 function saveTasks() {
     localStorage.setItem("tasks", JSON.stringify(tasks));
+}
+
+function updateCounter() {
+    const pendingTasks = tasks.filter(task => !task.completed).length;
+    taskCount.textContent = pendingTasks;
 }
 
 function displayTasks(filter = "all") {
@@ -14,8 +19,13 @@ function displayTasks(filter = "all") {
 
     tasks.forEach((task, index) => {
 
-        if (filter === "completed" && !task.completed) return;
-        if (filter === "pending" && task.completed) return;
+        if (filter === "completed" && !task.completed) {
+            return;
+        }
+
+        if (filter === "pending" && task.completed) {
+            return;
+        }
 
         const li = document.createElement("li");
         li.className = "task";
@@ -26,9 +36,6 @@ function displayTasks(filter = "all") {
 
         const taskText = document.createElement("span");
         taskText.textContent = task.text;
-
-        const buttons = document.createElement("div");
-        buttons.className = "task-buttons";
 
         const completeButton = document.createElement("button");
         completeButton.textContent = task.completed ? "Undo" : "Complete";
@@ -48,11 +55,9 @@ function displayTasks(filter = "all") {
             displayTasks(filter);
         });
 
-        buttons.appendChild(completeButton);
-        buttons.appendChild(deleteButton);
-
         li.appendChild(taskText);
-        li.appendChild(buttons);
+        li.appendChild(completeButton);
+        li.appendChild(deleteButton);
 
         taskList.appendChild(li);
     });
@@ -60,13 +65,7 @@ function displayTasks(filter = "all") {
     updateCounter();
 }
 
-function updateCounter() {
-    const pendingTasks = tasks.filter(task => !task.completed);
-    taskCount.textContent = pendingTasks.length;
-}
-
-addTaskButton.addEventListener("click", function () {
-
+function addTask() {
     const text = taskInput.value.trim();
 
     if (text === "") {
@@ -79,15 +78,19 @@ addTaskButton.addEventListener("click", function () {
         completed: false
     });
 
+    saveTasks();
+
     taskInput.value = "";
 
-    saveTasks();
     displayTasks();
-});
+}
 
-taskInput.addEventListener("keypress", function (event) {
+addTaskButton.addEventListener("click", addTask);
+
+taskInput.addEventListener("keydown", function (event) {
     if (event.key === "Enter") {
-        addTaskButton.click();
+        event.preventDefault();
+        addTask();
     }
 });
 
