@@ -1,17 +1,24 @@
+let tasks = [];
+
+try {
+    tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+} catch (error) {
+    tasks = [];
+    localStorage.removeItem("tasks");
+}
+
 const taskInput = document.getElementById("taskInput");
 const addTaskButton = document.getElementById("addTask");
 const taskList = document.getElementById("taskList");
 const taskCount = document.getElementById("taskCount");
-
-let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
 
 function saveTasks() {
     localStorage.setItem("tasks", JSON.stringify(tasks));
 }
 
 function updateCounter() {
-    const pendingTasks = tasks.filter(task => !task.completed).length;
-    taskCount.textContent = pendingTasks;
+    const pending = tasks.filter(task => !task.completed).length;
+    taskCount.textContent = pending;
 }
 
 function displayTasks(filter = "all") {
@@ -19,11 +26,11 @@ function displayTasks(filter = "all") {
 
     tasks.forEach((task, index) => {
 
-        if (filter === "completed" && !task.completed) {
+        if (filter === "pending" && task.completed) {
             return;
         }
 
-        if (filter === "pending" && task.completed) {
+        if (filter === "completed" && !task.completed) {
             return;
         }
 
@@ -34,13 +41,13 @@ function displayTasks(filter = "all") {
             li.classList.add("completed");
         }
 
-        const taskText = document.createElement("span");
-        taskText.textContent = task.text;
+        const text = document.createElement("span");
+        text.textContent = task.text;
 
         const completeButton = document.createElement("button");
         completeButton.textContent = task.completed ? "Undo" : "Complete";
 
-        completeButton.addEventListener("click", function () {
+        completeButton.addEventListener("click", function() {
             tasks[index].completed = !tasks[index].completed;
             saveTasks();
             displayTasks(filter);
@@ -49,13 +56,13 @@ function displayTasks(filter = "all") {
         const deleteButton = document.createElement("button");
         deleteButton.textContent = "Delete";
 
-        deleteButton.addEventListener("click", function () {
+        deleteButton.addEventListener("click", function() {
             tasks.splice(index, 1);
             saveTasks();
             displayTasks(filter);
         });
 
-        li.appendChild(taskText);
+        li.appendChild(text);
         li.appendChild(completeButton);
         li.appendChild(deleteButton);
 
@@ -78,16 +85,15 @@ function addTask() {
         completed: false
     });
 
-    saveTasks();
-
     taskInput.value = "";
 
+    saveTasks();
     displayTasks();
 }
 
 addTaskButton.addEventListener("click", addTask);
 
-taskInput.addEventListener("keydown", function (event) {
+taskInput.addEventListener("keydown", function(event) {
     if (event.key === "Enter") {
         event.preventDefault();
         addTask();
